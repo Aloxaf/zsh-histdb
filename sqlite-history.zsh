@@ -1,7 +1,9 @@
-which sqlite3 >/dev/null 2>&1 || return;
+emulate -L zsh
+
+(( $+commands[sqlite3] )) || return;
 
 zmodload zsh/system # for sysopen
-which sysopen &>/dev/null || return; # guard against zsh older than 5.0.8.
+(( $+builtins[sysopen] )) || return; # guard against zsh older than 5.0.8.
 
 zmodload -F zsh/stat b:zstat # just zstat
 autoload -U add-zsh-hook
@@ -111,7 +113,7 @@ EOF
 }
 
 declare -ga _BORING_COMMANDS
-_BORING_COMMANDS=("^ls$" "^cd$" "^ " "^histdb" "^top$" "^htop$")
+_BORING_COMMANDS=("ls" "cd" " *" "histdb*" "top" "htop")
 
 if [[ -z "${HISTDB_TABULATE_CMD[*]:-}" ]]; then
     declare -ga HISTDB_TABULATE_CMD
@@ -137,11 +139,9 @@ EOF
 _histdb_addhistory () {
     local cmd="${1[0, -2]}"
 
-    for boring in "${_BORING_COMMANDS[@]}"; do
-        if [[ "$cmd" =~ $boring ]]; then
-            return 0
-        fi
-    done
+    if [[ $cmd == ${~${(j:|:)_BORING_COMMANDS}} ]]; then
+        return 0
+    fi
 
     local cmd="'$(sql_escape $cmd)'"
     local pwd="'$(sql_escape ${PWD})'"
