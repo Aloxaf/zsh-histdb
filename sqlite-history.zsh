@@ -21,7 +21,7 @@ typeset -g HISTDB_INSTALLED_IN="${(%):-%N}"
 
 
 sql_escape () {
-    sed -e "s/'/''/g" <<< "$@" | tr -d '\000'
+    print -r ${${@//\'/\'\'}//$'\0'}
 }
 
 _histdb_query () {
